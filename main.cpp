@@ -4,7 +4,7 @@ int main(int argc, char *argv[])
 {
 	RFILE *f;
 	if (argc == 1){
-		f = MRFILE_New("D:/tinypy/my_py/bin/Debug/t.pyc");
+		f = MRFILE_New("helloworld.pyc");
 	}
 	else{
 		f = MRFILE_New(argv[1]);
