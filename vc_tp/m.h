@@ -1,6 +1,9 @@
 #ifndef __M__
 #define __M__
 
+#define DEBUG
+
+#include <tchar.h>
 #include "mobj.h"
 #include "mlist.h"
 #include "mdict.h"

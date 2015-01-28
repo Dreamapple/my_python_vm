@@ -5,11 +5,12 @@
 //Firstly,It can decode bytecodes of "print('hello')" for ver 3.4 and run it.
 
 //Now,can I open a file?
+//this file,I imply :parse pyc file'header and code object
 
 #ifdef DEBUG
 unsigned char get(RFILE *f){
-	unsigned char ch = getc(f->fp);
-	printf("We get a char %u\n", ch);
+	unsigned char ch = f->fp->_base[f->fp->_cnt++];
+	printf("[*] We get a char %u\n", ch);
 	return (unsigned char)ch;
 }
 #else
@@ -105,14 +106,17 @@ Header *load_head(RFILE *f){
 	Header *h = (Header *)malloc(12);
 	h->magic = r_short(f);
 	h->blank = r_short(f);
-	h->mtime = (time_t)r_long(f);
+	h->mtime = r_long(f);
 	h->code_size = r_long(f);
 #ifdef DEBUG
 	printf("Header size is %u\n", sizeof(Header));
 	printf("magic is %u.\n", h->magic);
-	char t[30];
-	ctime_s(t, 30, &(h->mtime));
-	printf("mtime is %u,ctime is %s.\n", h->mtime, t);
+
+	time_t ltime = (time_t)h->mtime;
+	wchar_t buf[26];
+	_wctime_s(buf, 26, &ltime);
+	wprintf_s(L"The time is %s\n", buf);
+
 	printf("codesize is %u.\n", h->code_size);
 	//printf("Now the cur is %s\n",ftell(f));
 #endif
@@ -186,6 +190,7 @@ RFILE *MRFILE_New(char * path){
 	if (fopen_s(&fp, path, "rb") != 0){
 		return 0;
 	}
+	
 	f->list = MList_New();
 	f->fp = fp;
 	return f;
@@ -211,4 +216,29 @@ void simple_test(){
 	RFILE *f = MRFILE_New("D:/tinypy/my_py/bin/Debug/t.pyc");
 	Header *h = (Header *)load_head(f);
 	PyCodeObject *code = (PyCodeObject *)r_object(f);
+}
+
+int RFILE::NEW(TCHAR *path){
+	fp = (FILE*)malloc(sizeof(FILE));
+
+	std::ifstream in;
+	in.open(path, std::ios_base::binary);
+	in.seekg(0, std::ios::end);
+	int size = in.tellg();
+	size -= sizeof(Header);
+	char *s = new char[size];
+	in.seekg(0, std::ios::beg);
+	in.read((char*)&this->head, sizeof(Header));
+	in.read(s, size);
+
+	
+	fp->_bufsiz = size;
+	fp->_base = s;
+	fp->_cnt = 0;
+
+	//if (_wfopen_s(&fp, path, L"rb") != 0){
+	//	return 0;
+	//}
+	this->list = MList_New();
+	return 0;
 }

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <fstream>
+
 #include "mobj.h"
 #ifndef __UNPYC__
 #define __UNPYC__
@@ -39,10 +41,21 @@
 #define TYPE_SHORT_ASCII        'z'
 #define TYPE_SHORT_ASCII_INTERNED 'Z'
 
-typedef struct MFILE{
+struct Py_pyc_header;
+class RFILE{
+public:
+	RFILE(){};
+	RFILE(TCHAR *path){
+		fp = (FILE*)malloc(sizeof(FILE));
+		_wfopen_s(&fp, path, L"rb");
+		this->list = MList_New();
+	}
 	FILE *fp;
 	MList *list;
-} RFILE;
+	struct Py_pyc_header *head;
+
+	int NEW(TCHAR *path);
+};
 
 /* Bytecode object */
 typedef struct tagPyCodeObject{
@@ -74,8 +87,8 @@ typedef unsigned char byte;
 typedef struct Py_pyc_header{
 	short magic;
 	short blank;
-	time_t mtime;
-	long code_size;
+	int mtime;
+	int code_size;
 } Header;
 
 
