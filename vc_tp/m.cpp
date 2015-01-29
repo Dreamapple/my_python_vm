@@ -3,7 +3,6 @@
 #include <iostream>
 using namespace std;
 
-#define out(s) cout<< #s <<":" << f.fp->s<<endl;
 int _tmain(int argc, _TCHAR* argv[])
 {
 	RFILE f;
@@ -14,13 +13,16 @@ int _tmain(int argc, _TCHAR* argv[])
 		f.NEW(argv[1]);
 	}
 
-	MCode *code = (MCode *)r_object(&f);
+	marshal ms(&f);
 
-	init_builtin();
-	MDict *local = MDict_New();
-	MDict *global = MDict_New();
-	MFrame *frame=MFrame_New(code, local, global);
-	evalFrame(frame);
+	Code *code = (Code *)ms.r_object();
+
+	MFrame::init_builtin();
+
+	mdict local;
+	mdict global;
+	MFrame frame(code, &local, &global);
+	frame.evalFrame();
 	getchar();
 	return 0;
 }

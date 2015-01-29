@@ -1,53 +1,48 @@
 #include "m.h"
-MDict *builtin;
 
-void init_builtin(){
-	builtin = MDict_New();
-	MFunc_builtin *fun = MFunc_builtin_New(m_print);
-	//MString *s = MString_New("print");
-	MDict_SetItem_string(builtin, "print", (MObj *)fun);
-}
-MFrame *MFrame_New(MCode *code,MDict *local,MDict *global){
-	MFrame *f = (MFrame *)malloc(sizeof(MFrame));
-	f->code = code;
-	f->local = local;
-	f->global = global;
-	f->builtin = builtin;
-	f->stack = (MObj **)malloc(code->co_stacksize);
-	return f;
+mdict *MFrame::builtin = new mdict;
+
+void MFrame::init_builtin()
+{
+	MFunc_builtin *fun = new MFunc_builtin(m_print);
+	builtin->MDict_SetItem_string("print", (MObj *)fun);
 }
 
-void call_function(MObj ***pp_stack, int oparg){
-	MObj **stack = *pp_stack;
+MFrame::MFrame(Code *code, mdict *local, mdict *global)
+	:code(code), local(local), global(global), pos(0)
+{
+	stack.assign(code->co_stacksize, 0);
+}
+
+void MFrame::call_function(int oparg){
 	int na = oparg & 0xff;
 	int nk = (oparg >> 8) & 0xff;
 	int n = na + 2 * nk;
-	MObj **pfunc = stack - n - 1;
-	MObj *func = *pfunc++;
-	MTuple *arg_t = MTuple_New(na);
-	int i = 0;
-	for (; i < na; i++){
-		MTuple_SetItem(arg_t, i, *pfunc++);
+	int p = pos - n - 1;
+	MObj *func = stack[p++];
+	MTuple *arg_t = new MTuple(na);
+	
+	for (int i = 0; i < na; i++){
+		arg_t->MTuple_SetItem(i, stack[p++]);
 	}
-	MDict *arg_k = MDict_New();
-	for (; i < nk; i = i + 2){
-		MDict_SetItem(arg_k, *pfunc++, *pfunc++);
+	mdict *arg_k = new mdict;
+	for (int i = 0; i < nk; i = i + 2){
+		arg_k->MDict_SetItem(stack[p++], (MObj *)stack[p++]);
 	}
 
 	//	MObj *retval, *temp;
-	if (func->type == 8){ //builtin
-		stack = stack - n - 1;
-		*stack++ = MFunc_builtin_Run((MFunc_builtin *)func, arg_t, arg_k);
+	if (((MObj *)func)->type == 8){ //builtin
+		pos = pos - n - 1;
+		stack[pos++] = ((MFunc_builtin *)func)->MFunc_builtin_Run(arg_t, arg_k);
 	}
 	else{
 		return;
 	}
 }
 
-MObj *evalFrame(MFrame *f){
-	PyCodeObject *c = f->code;
+void *MFrame::evalFrame(){
+	Code *c = code;
 	const char *code = c->co_code->val;
-	MObj **stack = f->stack;
 	int i = 0;
 	unsigned char op = 0;
 	int arg = 0;
@@ -62,36 +57,34 @@ MObj *evalFrame(MFrame *f){
 		}
 		switch (op){
 		case POP_TOP:
-			stack--;
+			pos--;
 			break;
 		case LOAD_NAME:
-			name = MTuple_GetItem(c->co_names, arg);
-			if (MDict_GetItem(f->local, name) != nullptr){
-				*stack++ = MDict_GetItem(f->local, name);
+			name = c->co_names->MTuple_GetItem(arg);
+			if (local->MDict_GetItem(name) != 0){
+				stack[pos++]=local->MDict_GetItem(name);
 			}
-			else if (MDict_GetItem(f->global, name) != nullptr){
-				*stack++ = MDict_GetItem(f->global, name);
+			else if (global->MDict_GetItem(name) != 0){
+				stack[pos++] = global->MDict_GetItem(name);
 			}
-			else if (MDict_GetItem(f->builtin, name) != nullptr){
-				*stack++ = MDict_GetItem(f->builtin, name);
+			else if (builtin->MDict_GetItem(name) != 0){
+				stack[pos++] = builtin->MDict_GetItem(name);
 			}
 			else{
 				printf("can not found name %s in anywhere", ((MString *)name)->val);///???
 			}
 			break;
 		case LOAD_CONST:
-			*stack++ = MTuple_GetItem(c->co_consts, arg);
+			stack[pos++] = c->co_consts->MTuple_GetItem(arg);
 			break;
 		case CALL_FUNCTION:
-			call_function(&stack, arg);
+			call_function(arg);
 			break;
 		case RETURN_VALUE:
-			return *stack;
+			return (void *)stack[pos];
 		default:
 			printf("not found opcode %i", op);
 		}
-
-
 	}
 	return nullptr;
 }

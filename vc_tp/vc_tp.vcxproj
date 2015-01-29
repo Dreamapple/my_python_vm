@@ -87,11 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="m.h" />
-    <ClInclude Include="mdict.h" />
-    <ClInclude Include="mfunc.h" />
-    <ClInclude Include="mlist.h" />
-    <ClInclude Include="mobj.h" />
-    <ClInclude Include="mvm.h" />
+    <ClInclude Include="obj.h" />
     <ClInclude Include="opcode.h" />
     <ClInclude Include="unpyc.h" />
   </ItemGroup>

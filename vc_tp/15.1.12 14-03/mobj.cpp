@@ -1,9 +1,10 @@
 #include "m.h"
 
-MString::MString(const char *s)
-{
-	type = 2;
-	val = s;
+MString *MString_New(const char *s){
+	MString *r = (MString *)malloc(4);
+	r->type = 2;
+	r->val = s;
+	return r;
 }
 const char* MPrint_MObj(MObj *self){
 	if (self->type == 0){

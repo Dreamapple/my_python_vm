@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <fstream>
-
-#include "obj.h"
+#include "mobj.h"
 #ifndef __UNPYC__
 #define __UNPYC__
+#define PyObject void
+
 
 #define TYPE_NULL               '0'
 #define TYPE_NONE               'N'
@@ -39,31 +39,13 @@
 #define TYPE_SHORT_ASCII        'z'
 #define TYPE_SHORT_ASCII_INTERNED 'Z'
 
-typedef unsigned char byte;
-
-class RFILE{
-public:
-	RFILE(){};
-	RFILE(TCHAR *path){
-		fp = (FILE*)malloc(sizeof(FILE));
-		_wfopen_s(&fp, path, L"rb");
-		this->list = new MList;
-	}
+typedef struct MFILE{
 	FILE *fp;
 	MList *list;
-	struct{
-		short magic;
-		short blank;
-		int mtime;
-		int code_size;
-	} head;
-
-	int NEW(TCHAR *path);
-};
+} RFILE;
 
 /* Bytecode object */
-class Code{
-public:
+typedef struct tagPyCodeObject{
 	int type;        //10
 	int co_argcount;		/* #arguments, except *args */
 	int co_kwonlyargcount;	/* #keyword only arguments */
@@ -84,30 +66,24 @@ public:
 	MString *co_lnotab;	/* string (encoding addr<->lineno mapping) See
 							Objects/lnotab_notesntxt for details. */
 	void *co_zombieframe;     /* for optimization only (see frameobject.c) */
-	void *co_weakreflist;   /* to support weakrefs to code objects */
-};
+	PyObject *co_weakreflist;   /* to support weakrefs to code objects */
+} PyCodeObject,MCode;
+
+typedef unsigned char byte;
+
+typedef struct Py_pyc_header{
+	short magic;
+	short blank;
+	time_t mtime;
+	long code_size;
+} Header;
 
 
-
-
-class marshal
-{
-public:
-	char *code;
-	int pos;
-	int size;
-	MList *list;
-
-	marshal(RFILE *f);
-
-	MObj *r_object();
-	MTuple *r_tuple(int n);
-	MString *r_string(int count);
-	unsigned long r_long();
-	unsigned short r_short();
-	unsigned char r_byte();
-	unsigned char get();
-	Code *load_pyc();
-};
+PyCodeObject *load_pyc(RFILE *);
+MObj *r_object(RFILE *);
+MList *MList_New();
+Header *load_head(RFILE *f);
+RFILE *MRFILE_New(char * path);
+void simple_test();
 #endif
 

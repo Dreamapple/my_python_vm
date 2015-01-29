@@ -1,5 +1,8 @@
 #ifndef Py_OPCODE_H
 #define Py_OPCODE_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /* Instruction opcodes for compiled code */
@@ -150,4 +153,7 @@ enum cmp_op {PyCmp_LT, PyCmp_LE, PyCmp_EQ, PyCmp_NE, PyCmp_GT, PyCmp_GE,
 
 #define HAS_ARG(op) ((op) >= HAVE_ARGUMENT)
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* !Py_OPCODE_H */

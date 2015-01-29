@@ -47,22 +47,10 @@
     <ClInclude Include="opcode.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="mobj.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mvm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mfunc.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="m.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="mlist.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="mdict.h">
+    <ClInclude Include="obj.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
